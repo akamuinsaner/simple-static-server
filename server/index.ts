@@ -7,7 +7,7 @@ import mime from './mime';
 class Server {
     constructor() {
         this.port = 3456;
-        this.root = path.resolve(process.cwd(), 'public');
+        this.root = path.resolve(process.cwd());
         this.indexPage = 'index.html';
     }
 
@@ -71,6 +71,7 @@ class Server {
 
     routeHandler(pathName, req, res) {
         fs.stat(pathName, (err, stat) => {
+            console.log(pathName)
             if (!err) {
                 const requestedPath = url.parse(req.url).pathname;
                 if (this.hasTrailingSlash(requestedPath) && stat.isDirectory()) {
@@ -88,7 +89,7 @@ class Server {
 
     start() {
         http.createServer((req, res) => {
-            const pathName = path.join(this.root, path.normalize(req.url), this.indexPage);
+            const pathName = path.join(this.root, path.normalize(req.url));
             this.routeHandler(pathName, req, res);
         }).listen(this.port);
     }
