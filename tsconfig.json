@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outDir": "lib",
+        "declaration": true,
+        "moduleResolution": "node",
+        "module": "commonjs",
+        "target": "esnext"
+    },
+    "include": [
+        "./**/*.ts",
+    ],
+    "exclude": [
+        "node_modules/",
+        "dist/**/*"
+    ]
+}
