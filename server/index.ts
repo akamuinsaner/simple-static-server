@@ -2,6 +2,7 @@ import * as http from 'http';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as url from 'url';
+import * as zlib from 'zlib';
 import mime from './mime';
 
 class Server {
@@ -14,6 +15,7 @@ class Server {
         this.enableETag = true;
         this.enableLastModified = true;
         this.maxAge = 100;
+        this.zipMatch = new RegExp("^\\.(css|js|html)$");
     }
 
     port: number;
@@ -24,6 +26,7 @@ class Server {
     enableETag: boolean;
     enableLastModified: boolean;
     maxAge: number;
+    zipMatch: RegExp;
 
     respondNotFound(req, res) {
         res.writeHead(404, {
@@ -32,8 +35,21 @@ class Server {
         res.end(`<h1>Not Found</h1><p>The requested URL ${req.url} was not found on this server.</p>`);
     }
 
-    respondFile(pathName, res) {
-        const readStream = fs.createReadStream(pathName);
+    compressHandler(readStream, req, res) {
+        const acceptEncoding = req.headers['accept-encoding'];
+        if (!acceptEncoding || !acceptEncoding.match(/\b(gzip|deflate)\b/)) {
+            return readStream;
+        } else if (acceptEncoding.match(/\bgzip\b/)) {
+            res.setHeader('Content-Encoding', 'gzip');
+            return readStream.pipe(zlib.createGzip());
+        } else if (acceptEncoding.match(/\bdeflate\b/)) {
+            res.setHeader('Content-Encoding', 'deflate');
+            return readStream.pipe(zlib.createDeflate());
+        }
+    }
+
+    respondFile(pathName, req, res) {
+        const readStream = this.compressHandler(fs.createReadStream(pathName), req, res);
         res.setHeader('Content-Type', mime.lookup(pathName));
         readStream.pipe(res);
     }
@@ -73,7 +89,7 @@ class Server {
     respondDirectory(pathName, req, res) {
         const indexPagePath = path.join(pathName, this.indexPage);
         if (fs.existsSync(indexPagePath)) {
-            this.respondFile(indexPagePath, res);
+            this.respondFile(indexPagePath, req, res);
         } else {
             fs.readdir(pathName, (err, files) => {
                 if (err) {
@@ -129,7 +145,7 @@ class Server {
                     if (this.isFresh(req.headers, res._headers)) {
                         this.responseNotModified(res);
                     } else {
-                        this.respondFile(pathName, res);
+                        this.respondFile(pathName, req, res);
                     }
                 }
             } else {
