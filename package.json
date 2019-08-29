@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^12.7.2",
-    "typescript": "^3.5.3"
+    "@types/yargs": "^13.0.2",
+    "typescript": "^3.5.3",
+    "yargs": "^14.0.0"
   }
 }
