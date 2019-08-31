@@ -6,6 +6,7 @@ const mimeTypes = {
     "html": "text/html",
     "ico": "image/x-icon",
     "jpeg": "image/jpeg",
+    "jpg": "image/jpg",
     "txt": "text/plain"
 };
 
